@@ -1,11 +1,25 @@
+//
+// Copyright 2016 Sebastien Soudan
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package home
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/ssoudan/hugo/home/types"
 	"github.com/ssoudan/hugo/logging"
+	"github.com/ssoudan/hugo/scene"
 
 	"github.com/andreaskoch/go.hue"
 )
@@ -47,10 +61,6 @@ func New(desc types.HomeDescription, lights []*hue.Light) *Home {
 		}
 	}
 
-	for _, light := range lights {
-		fmt.Printf("%+v\n", light.Name)
-	}
-
 	return &home
 }
 
@@ -79,24 +89,11 @@ func (h Home) SetPlaceBrightness(placeName string, brightness int) {
 	place, ok := h.Places[placeName]
 	if ok {
 		for _, light := range place.Lights {
-			attr, err := light.GetLightAttributes()
-			if err != nil {
-				log.Error("Failed to get light attribtues: %v", err)
-				continue
-			}
 			state := hue.SetLightState{
-				Hue:            strconv.Itoa(attr.State.Hue),
-				On:             fmt.Sprintf("%v", attr.State.On),
-				Effect:         attr.State.Effect,
-				Alert:          attr.State.Alert,
-				Bri:            strconv.Itoa(brightness),
-				Sat:            strconv.Itoa(attr.State.Sat),
-				Ct:             strconv.Itoa(attr.State.Ct),
-				Xy:             attr.State.Xy,
-				TransitionTime: "0",
+				Bri: strconv.Itoa(brightness * 255 / 100),
 			}
 
-			_, err = light.SetState(state)
+			_, err := light.SetState(state)
 			if err != nil {
 				log.Error("Failed to set state: %v", err)
 			}
@@ -109,24 +106,11 @@ func (h Home) SetPlaceSaturation(placeName string, saturation float64) {
 	place, ok := h.Places[placeName]
 	if ok {
 		for _, light := range place.Lights {
-			attr, err := light.GetLightAttributes()
-			if err != nil {
-				log.Error("Failed to get light attribtues: %v", err)
-				continue
-			}
 			state := hue.SetLightState{
-				Hue:            strconv.Itoa(attr.State.Hue),
-				On:             fmt.Sprintf("%v", attr.State.On),
-				Effect:         attr.State.Effect,
-				Alert:          attr.State.Alert,
-				Bri:            strconv.Itoa(attr.State.Bri),
-				Sat:            strconv.Itoa(int(saturation)),
-				Ct:             strconv.Itoa(attr.State.Ct),
-				Xy:             attr.State.Xy,
-				TransitionTime: "0",
+				Sat: strconv.Itoa(int(saturation * 255 / 100)),
 			}
 
-			_, err = light.SetState(state)
+			_, err := light.SetState(state)
 			if err != nil {
 				log.Error("Failed to set state: %v", err)
 			}
@@ -139,27 +123,43 @@ func (h Home) SetPlaceHue(placeName string, hh float64) {
 	place, ok := h.Places[placeName]
 	if ok {
 		for _, light := range place.Lights {
-			attr, err := light.GetLightAttributes()
-			if err != nil {
-				log.Error("Failed to get light attribtues: %v", err)
-				continue
-			}
 			state := hue.SetLightState{
-				Hue:            strconv.Itoa(int(hh)),
-				On:             fmt.Sprintf("%v", attr.State.On),
-				Effect:         attr.State.Effect,
-				Alert:          attr.State.Alert,
-				Bri:            strconv.Itoa(attr.State.Bri),
-				Sat:            strconv.Itoa(attr.State.Sat),
-				Ct:             strconv.Itoa(attr.State.Ct),
-				Xy:             attr.State.Xy,
-				TransitionTime: "0",
+				Hue: strconv.Itoa(int(hh * 65280 / 360.)),
 			}
 
-			_, err = light.SetState(state)
+			_, err := light.SetState(state)
 			if err != nil {
 				log.Error("Failed to set state: %v", err)
 			}
 		}
+	}
+}
+
+// SetPlaceAttributes sets all 3 attributes of a light
+func (h Home) SetPlaceAttributes(placeName string, hh float64, saturation float64, brightness int) {
+	place, ok := h.Places[placeName]
+	if ok {
+		for _, light := range place.Lights {
+
+			state := hue.SetLightState{
+				Hue: strconv.Itoa(int(hh * 65280 / 360.)),
+				Sat: strconv.Itoa(int(saturation * 255 / 100)),
+				Bri: strconv.Itoa(brightness * 255 / 100),
+			}
+
+			_, err := light.SetState(state)
+			if err != nil {
+				log.Error("Failed to set state: %v", err)
+			}
+		}
+	}
+}
+
+// SetScene sets a Scene
+func (h Home) SetScene(scene scene.Scene) {
+
+	for _, c := range scene {
+		h.LightPlaceOn(c.Place)
+		h.SetPlaceAttributes(c.Place, c.Hue, c.Saturation, c.Brightness)
 	}
 }

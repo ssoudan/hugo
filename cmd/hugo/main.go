@@ -40,13 +40,6 @@ var (
 func main() {
 	flag.Parse()
 
-	const bridgeIP = "192.168.1.100"
-	const apiKey = "rRgZYFkvVS0hOKAAHscxOM5gx3RPMBOGN3VTBloV"
-
-	bridge := hue.NewBridge(bridgeIP, apiKey)
-	// bridge.Debug()
-	lights, _ := bridge.GetAllLights()
-
 	// if !*redPtr && !*greenPtr && !*bluePtr && !*yellowPtr && !*pinkPtr && !*offPtr && !*whitePtr {
 	// 	fmt.Println("You need to specify one flag!")
 	// 	flag.Usage()
@@ -66,10 +59,13 @@ func main() {
 	// }
 
 	desc, err := types.ReadFromFile("home.json")
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	bridge := hue.NewBridge(desc.Bridge.IP, desc.Bridge.APIKey)
+	// bridge.Debug()
+	lights, _ := bridge.GetAllLights()
 
 	home := home.New(*desc, lights)
 
