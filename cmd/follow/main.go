@@ -1,5 +1,5 @@
 //
-// Copyright 2016 Sebastien Soudan
+// Copyright 2015 Sebastien Soudan
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,24 +16,21 @@ package main
 
 import (
 	"flag"
-	"os"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/andreaskoch/go.hue"
-
-	"github.com/ssoudan/hugo/home"
 	"github.com/ssoudan/hugo/home/types"
 	"github.com/ssoudan/hugo/logging"
-	"github.com/ssoudan/hugo/scene"
 )
 
-var log = logging.Log("hugo")
+var log = logging.Log("follow")
 
 var (
-	homeFileName  = flag.String("h", "home.json", "Home description json file")
-	sceneFileName = flag.String("s", "scene.json", "Scene description json file")
-
-	partyMode = flag.Bool("p", false, "Party mode")
+	homeFileName     = flag.String("h", "home.json", "Home description json file")
+	masterLight      = flag.String("m", "stb - room 1", "Master light")
+	slaveLightPrefix = flag.String("s", "stb - room", "Slave light name prefix")
 )
 
 func check(err error) {
@@ -46,36 +43,40 @@ func main() {
 	flag.Parse()
 
 	log.Info("Using home description from %s", *homeFileName)
-	log.Info("Using scene description from %s", *sceneFileName)
-
 	desc, err := types.ReadFromFile(*homeFileName)
 	check(err)
 
 	bridge := hue.NewBridge(desc.Bridge.IP, desc.Bridge.APIKey)
-	// bridge.Debug()
-	lights, err := bridge.GetAllLights()
-	check(err)
 
-	home := home.New(*desc, lights)
+	for {
+		// bridge.Debug()
+		lights, _ := bridge.GetAllLights()
 
-	log.Debug("%v", home)
-
-	sceneFile, err := os.Open(*sceneFileName)
-	check(err)
-
-	s, err := scene.Read(sceneFile)
-	check(err)
-
-	if *partyMode {
-		log.Info("Party mode!")
-		r := s
-		for {
-			home.SetScene(r)
-			r = r.Rotate()
-			time.Sleep(2 * time.Second)
+		mainLight, err := bridge.FindLightByName(*masterLight)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
-	} else {
-		home.SetScene(s)
-	}
+		la, err := mainLight.GetLightAttributes()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
+		fmt.Printf("%v - %v\n", time.Now(), la.State)
+		if la.State.Reachable && la.State.On {
+			for _, light := range lights {
+				if !strings.HasPrefix(light.Name, *slaveLightPrefix) {
+					light.On()
+				}
+			}
+		} else {
+			for _, light := range lights {
+				if !strings.HasPrefix(light.Name, *slaveLightPrefix) {
+					light.Off()
+				}
+			}
+		}
+		time.Sleep(5 * time.Second)
+	}
 }
