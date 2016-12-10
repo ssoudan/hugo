@@ -18,6 +18,7 @@ import (
 	"flag"
 
 	"github.com/andreaskoch/go.hue"
+	"github.com/brutella/hc/accessory"
 
 	"github.com/ssoudan/hugo/home"
 	"github.com/ssoudan/hugo/home/types"
@@ -28,160 +29,68 @@ import (
 var log = logging.Log("hugo")
 
 var (
-	redPtr    = flag.Bool("red", false, "red color")
-	greenPtr  = flag.Bool("green", false, "green color")
-	bluePtr   = flag.Bool("blue", false, "blue color")
-	yellowPtr = flag.Bool("yellow", false, "yellow color")
-	pinkPtr   = flag.Bool("pink", false, "pink color")
-	offPtr    = flag.Bool("off", false, "off")
-	whitePtr  = flag.Bool("white", false, "white")
+	homeFileName = flag.String("h", "home.json", "Home description json file")
 )
+
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func main() {
 	flag.Parse()
 
-	const bridgeIP = "192.168.1.100"
-	const apiKey = "rRgZYFkvVS0hOKAAHscxOM5gx3RPMBOGN3VTBloV"
+	log.Info("Using home description from %s", *homeFileName)
+	desc, err := types.ReadFromFile(*homeFileName)
+	check(err)
 
-	bridge := hue.NewBridge(bridgeIP, apiKey)
-	// bridge.Debug()
+	bridge := hue.NewBridge(desc.Bridge.IP, desc.Bridge.APIKey)
+
 	lights, _ := bridge.GetAllLights()
-
-	// if !*redPtr && !*greenPtr && !*bluePtr && !*yellowPtr && !*pinkPtr && !*offPtr && !*whitePtr {
-	// 	fmt.Println("You need to specify one flag!")
-	// 	flag.Usage()
-	// 	return
-	// }
-
-	// count := 0
-	// for _, ptr := range []*bool{redPtr, greenPtr, bluePtr, yellowPtr, pinkPtr, offPtr, whitePtr} {
-	// 	if *ptr {
-	// 		count = count + 1
-	// 	}
-	// }
-	// if count > 1 {
-	// 	fmt.Println("You can't have more than one flag!")
-	// 	flag.Usage()
-	// 	return
-	// }
-
-	desc, err := types.ReadFromFile("home.json")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	home := home.New(*desc, lights)
 
-	log.Debug("%v", home)
+	accessories := []*accessory.Accessory{}
 
-	home.LightPlaceOn("salon")
+	for name := range home.Places {
+		a := homekit.CreateLightBuld(name+" room",
+			func(on bool) {
+				if on == true {
+					log.Debug("Client changed switch to on")
+					home.LightPlaceOn(name)
+				} else {
+					log.Debug("Client changed switch to off")
+					home.LightPlaceOff(name)
+				}
+			},
+			func(brightness int) {
+				log.Debug("Client changed lightbulb brightness %d", brightness)
+				home.SetPlaceBrightness(name, brightness)
+			},
+			func(saturation float64) {
+				log.Debug("Client changed lightbulb saturation %f", saturation)
+				home.SetPlaceSaturation(name, saturation)
+			},
+			func(hue float64) {
+				log.Debug("Client changed lightbulb hue %f", hue)
+				home.SetPlaceHue(name, hue)
+			})
 
-	a := homekit.CreateSwitch("Lamp", func(on bool) {
-		if on == true {
-			log.Debug("Client changed switch to on")
-			home.LightPlaceOn("salon")
-		} else {
-			log.Debug("Client changed switch to off")
-			home.LightPlaceOff("salon")
+		accessories = append(accessories, a)
+	}
+
+	master := homekit.CreateSwitch("Master", func(on bool) {
+		for name := range home.Places {
+			if on == true {
+				log.Debug("Client changed switch to on")
+				home.LightPlaceOn(name)
+			} else {
+				log.Debug("Client changed switch to off")
+				home.LightPlaceOff(name)
+			}
 		}
 	})
 
-	b := homekit.CreateLightBuld("Salon",
-		func(on bool) {
-			if on == true {
-				log.Debug("Client changed switch to on")
-				home.LightPlaceOn("salon")
-			} else {
-				log.Debug("Client changed switch to off")
-				home.LightPlaceOff("salon")
-			}
-		},
-		func(brightness int) {
-			log.Debug("Client changed lightbulb brightness %d", brightness)
-			home.SetPlaceBrightness("salon", brightness)
-		},
-		func(saturation float64) {
-			log.Debug("Client changed lightbulb saturation %f", saturation)
-			home.SetPlaceSaturation("salon", saturation)
-		},
-		func(hue float64) {
-			log.Debug("Client changed lightbulb hue %f", hue)
-			home.SetPlaceHue("salon", hue)
-		})
-
-	homekit.Start(a, b)
-
-	//
-	// for _, light := range lights {
-	// 	fmt.Printf("%+v\n", light.Name)
-	//
-	// 	// attributes, err := light.GetLightAttributes()
-	// 	// if err != nil {
-	// 	// 	fmt.Fprintf(os.Stderr, "%s", err)
-	// 	// 	continue
-	// 	// }
-	// 	// fmt.Printf("%#v\n", attributes.Name)
-	//
-	// 	// light.ColorLoop()
-	// 	// if *offPtr == true {
-	// 	// 	light.Off()
-	// 	// } else if *redPtr == true {
-	// 	// 	state := hue.SetLightState{
-	// 	// 		On:     "true",
-	// 	// 		Effect: "none",
-	// 	// 		Hue:    "0", // Red
-	// 	// 		Sat:    "255",
-	// 	// 		Bri:    "255",
-	// 	// 	}
-	// 	// 	light.SetState(state)
-	// 	// } else if *yellowPtr == true {
-	// 	// 	state := hue.SetLightState{
-	// 	// 		On:     "true",
-	// 	// 		Effect: "none",
-	// 	// 		Hue:    "12750", // Yellow
-	// 	// 		Sat:    "255",
-	// 	// 		Bri:    "255",
-	// 	// 	}
-	// 	// 	light.SetState(state)
-	// 	// } else if *greenPtr == true {
-	// 	// 	state := hue.SetLightState{
-	// 	// 		On:     "true",
-	// 	// 		Effect: "none",
-	// 	// 		// Hue:    "36210", // Green
-	// 	// 		Hue: "25500",
-	// 	// 		Sat: "255",
-	// 	// 		Bri: "255",
-	// 	// 	}
-	// 	// 	light.SetState(state)
-	// 	// } else if *bluePtr == true {
-	// 	// 	state := hue.SetLightState{
-	// 	// 		On:     "true",
-	// 	// 		Effect: "none",
-	// 	// 		Hue:    "46920", // Blue
-	// 	// 		Sat:    "255",
-	// 	// 		Bri:    "255",
-	// 	// 	}
-	// 	// 	light.SetState(state)
-	// 	// } else if *pinkPtr == true {
-	// 	// 	state := hue.SetLightState{
-	// 	// 		On:     "true",
-	// 	// 		Effect: "none",
-	// 	// 		Hue:    "56100", // Pink
-	// 	// 		Sat:    "255",
-	// 	// 		Bri:    "255",
-	// 	// 	}
-	// 	// 	light.SetState(state)
-	// 	// } else if *whitePtr == true {
-	// 	// 	state := hue.SetLightState{
-	// 	// 		On:     "true",
-	// 	// 		Effect: "none",
-	// 	// 		Ct:     "153", // White 6500k
-	// 	// 		Sat:    "255",
-	// 	// 		Bri:    "255",
-	// 	// 	}
-	// 	// 	light.SetState(state)
-	// 	// }
-	// }
+	homekit.Start(master, accessories...)
 
 }
