@@ -95,7 +95,7 @@ func (h Home) SetPlaceBrightness(placeName string, brightness int) {
 
 			_, err := light.SetState(state)
 			if err != nil {
-				log.Error("Failed to set state: %v", err)
+				log.Errorf("Failed to set state: %v", err)
 			}
 		}
 	}
@@ -112,7 +112,7 @@ func (h Home) SetPlaceSaturation(placeName string, saturation float64) {
 
 			_, err := light.SetState(state)
 			if err != nil {
-				log.Error("Failed to set state: %v", err)
+				log.Errorf("Failed to set state: %v", err)
 			}
 		}
 	}
@@ -129,7 +129,7 @@ func (h Home) SetPlaceHue(placeName string, hh float64) {
 
 			_, err := light.SetState(state)
 			if err != nil {
-				log.Error("Failed to set state: %v", err)
+				log.Errorf("Failed to set state: %v", err)
 			}
 		}
 	}
@@ -149,7 +149,7 @@ func (h Home) SetPlaceAttributes(placeName string, hh float64, saturation float6
 
 			_, err := light.SetState(state)
 			if err != nil {
-				log.Error("Failed to set state: %v", err)
+				log.Errorf("Failed to set state: %v", err)
 			}
 		}
 	}

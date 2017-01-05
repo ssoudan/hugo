@@ -41,7 +41,7 @@ func check(err error) {
 func main() {
 	flag.Parse()
 
-	log.Info("Using home description from %s", *homeFileName)
+	log.Infof("Using home description from %s", *homeFileName)
 	desc, err := types.ReadFromFile(*homeFileName)
 	check(err)
 
@@ -64,15 +64,15 @@ func main() {
 				}
 			},
 			func(brightness int) {
-				log.Debug("Client changed lightbulb brightness %d", brightness)
+				log.Debugf("Client changed lightbulb brightness %d", brightness)
 				home.SetPlaceBrightness(name, brightness)
 			},
 			func(saturation float64) {
-				log.Debug("Client changed lightbulb saturation %f", saturation)
+				log.Debugf("Client changed lightbulb saturation %f", saturation)
 				home.SetPlaceSaturation(name, saturation)
 			},
 			func(hue float64) {
-				log.Debug("Client changed lightbulb hue %f", hue)
+				log.Debugf("Client changed lightbulb hue %f", hue)
 				home.SetPlaceHue(name, hue)
 			})
 

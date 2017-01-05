@@ -42,7 +42,7 @@ func check(err error) {
 func main() {
 	flag.Parse()
 
-	log.Info("Using home description from %s", *homeFileName)
+	log.Infof("Using home description from %s", *homeFileName)
 	desc, err := types.ReadFromFile(*homeFileName)
 	check(err)
 

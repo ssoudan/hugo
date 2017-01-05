@@ -2,3 +2,6 @@
 **/Master/
 **/home.json
 **/scene.json
+*.iml
+*.exe
+**/.idea/

@@ -45,8 +45,8 @@ func check(err error) {
 func main() {
 	flag.Parse()
 
-	log.Info("Using home description from %s", *homeFileName)
-	log.Info("Using scene description from %s", *sceneFileName)
+	log.Infof("Using home description from %s", *homeFileName)
+	log.Infof("Using scene description from %s", *sceneFileName)
 
 	desc, err := types.ReadFromFile(*homeFileName)
 	check(err)
@@ -58,7 +58,7 @@ func main() {
 
 	home := home.New(*desc, lights)
 
-	log.Debug("%v", home)
+	log.Debugf("%v", home)
 
 	sceneFile, err := os.Open(*sceneFileName)
 	check(err)

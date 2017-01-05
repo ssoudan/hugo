@@ -29,5 +29,5 @@ func main() {
 
 	// remember to push the button on your hue first
 	bridge, _ := locator.CreateUser(deviceType)
-	log.Info("registered new device => %+v", bridge)
+	log.Infof("registered new device => %+v", bridge)
 }
