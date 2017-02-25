@@ -19,8 +19,8 @@ import (
 	"io"
 )
 
-// SceneElement is a scene element
-type SceneElement struct {
+// Element is a scene element
+type Element struct {
 	Place string `json:"place"`
 
 	Saturation float64 `json:"saturation"`
@@ -28,8 +28,8 @@ type SceneElement struct {
 	Hue        float64 `json:"hue"`
 }
 
-// Scene is a collection of SceneElement
-type Scene []SceneElement
+// Scene is a collection of Element
+type Scene []Element
 
 // Read a scene
 func Read(r io.Reader) (Scene, error) {
@@ -47,7 +47,7 @@ func Read(r io.Reader) (Scene, error) {
 // Rotate scene
 func (s Scene) Rotate() Scene {
 
-	r := make([]SceneElement, len(s))
+	r := make([]Element, len(s))
 
 	for i := 0; i < len(s); i++ {
 		r[i] = s[i]
