@@ -59,31 +59,28 @@ func main() {
 
 	fmt.Println("Starting")
 
+	var values [4]float32
 	for {
-		fmt.Println("=====")
+		select {
+		case <-time.After(500 * time.Millisecond):
+			fmt.Println("=====")
+			valueChanged := false
+			for i := byte(0); i < 4; i++ {
 
-		v, err := p.Read(0)
-		check(err)
-		fmt.Printf("p(0)=%f\n", v)
-
-		v, err = p.Read(1)
-		check(err)
-		fmt.Printf("p(1)=%f\n", v)
-
-		v, err = p.Read(2)
-		check(err)
-		fmt.Printf("p(2)=%f\n", v)
-
-		v, err = p.Read(3)
-		check(err)
-		fmt.Printf("p(3)=%f\n", v)
-
-		if v < 1.5 {
-			fmt.Println("rotating")
-			s = s.Rotate()
-			home.SetScene(s)
+				v, err := p.ReadAndScale(i)
+				check(err)
+				fmt.Printf("p(%d)=%f\n", i, v)
+				if v != values[i] {
+					valueChanged = true
+					values[i] = v
+				}
+			}
+			if valueChanged {
+				fmt.Println("Setting values")
+				s = s.SetValues(values[0], values[1], values[2])
+				home.SetScene(s)
+			}
 		}
-
-		time.Sleep(500 * time.Millisecond)
 	}
+
 }

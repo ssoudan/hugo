@@ -44,6 +44,20 @@ func Read(r io.Reader) (Scene, error) {
 	return scene, nil
 }
 
+// SetValues sets values for all Elements
+func (s Scene) SetValues(saturation, brightness, hue float32) Scene {
+	r := make([]Element, len(s))
+
+	for i := 0; i < len(s); i++ {
+		r[i] = s[i]
+		r[i].Brightness = int(brightness * 255)
+		r[i].Hue = float64(hue) * 100
+		r[i].Saturation = float64(saturation) * 100
+	}
+
+	return r
+}
+
 // Rotate scene
 func (s Scene) Rotate() Scene {
 
