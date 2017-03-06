@@ -142,9 +142,10 @@ func (h Home) SetPlaceAttributes(placeName string, hh float64, saturation float6
 		for _, light := range place.Lights {
 
 			state := hue.SetLightState{
-				Hue: strconv.Itoa(int(hh * 65280 / 360.)),
-				Sat: strconv.Itoa(int(saturation * 255 / 100)),
-				Bri: strconv.Itoa(brightness * 255 / 100),
+				Hue:            strconv.Itoa(int(hh * 65280 / 360.)),
+				Sat:            strconv.Itoa(int(saturation * 255 / 100)),
+				Bri:            strconv.Itoa(brightness * 255 / 100),
+				TransitionTime: "0",
 			}
 
 			_, err := light.SetState(state)
@@ -159,7 +160,6 @@ func (h Home) SetPlaceAttributes(placeName string, hh float64, saturation float6
 func (h Home) SetScene(scene scene.Scene) {
 
 	for _, c := range scene {
-		h.LightPlaceOn(c.Place)
 		h.SetPlaceAttributes(c.Place, c.Hue, c.Saturation, c.Brightness)
 	}
 }

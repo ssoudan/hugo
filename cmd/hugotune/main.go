@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -63,21 +64,21 @@ func main() {
 	for {
 		select {
 		case <-time.After(500 * time.Millisecond):
-			fmt.Println("=====")
 			valueChanged := false
 			for i := byte(0); i < 4; i++ {
 
 				v, err := p.ReadAndScale(i)
 				check(err)
-				fmt.Printf("p(%d)=%f\n", i, v)
+
 				if v != values[i] {
-					valueChanged = true
+					valueChanged = math.Abs(float64(v-values[i])) > 0.001
 					values[i] = v
 				}
 			}
 			if valueChanged {
-				fmt.Println("Setting values")
-				s = s.SetValues(values[0], values[1], values[2])
+				fmt.Println("=====")
+				fmt.Printf("p(0)=%.2f p(1)=%.2f p(2)=%.2f\n", values[0], values[1], values[2])
+				s = s.SetRGB(values[0], values[1], values[2])
 				home.SetScene(s)
 			}
 		}

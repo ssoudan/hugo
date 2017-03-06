@@ -59,5 +59,7 @@ func (p *Potentiometers) ReadAndScale(channel byte) (float32, error) {
 		return 0.5, nil
 	}
 
+	// fmt.Printf("c=%d m=%f M=%f\n", channel, min, max)
+
 	return (v - min) / (max - min), err
 }
