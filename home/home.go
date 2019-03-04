@@ -33,13 +33,15 @@ type Place struct {
 
 // Home is a collection of Places
 type Home struct {
-	Places map[string]Place
+	Places           map[string]Place
+	LightingSequence []string
 }
 
 // New creates a new Home from its description
 func New(desc types.HomeDescription, lights []*hue.Light) *Home {
 	home := Home{
-		Places: make(map[string]Place),
+		Places:           make(map[string]Place),
+		LightingSequence: desc.LightingSequence,
 	}
 
 	lightMap := make(map[string]*hue.Light)
