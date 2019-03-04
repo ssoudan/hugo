@@ -32,8 +32,9 @@ type BridgeDescription struct {
 
 // HomeDescription is the description of a Home (made of Place(s))
 type HomeDescription struct {
-	Places map[string]PlaceDescription `json:"places"`
-	Bridge BridgeDescription           `json:"bridge"`
+	Places           map[string]PlaceDescription `json:"places"`
+	Bridge           BridgeDescription           `json:"bridge"`
+	LightingSequence []string                    `json:"lighting-sequence"`
 }
 
 // ReadFromFile parses a home file into an Home object
